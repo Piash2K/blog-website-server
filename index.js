@@ -33,6 +33,21 @@ async function run() {
         const result = await blogsCollection.insertOne(blog);
         res.send(result);
       });
+
+      app.get("/recentBlogs", async (req, res) => {
+        try {
+          const result = await blogsCollection
+            .find()
+            .sort({ postedTime: -1 }) // Sort by postedTime (most recent first)
+            .limit(6) // Limit to 6 blogs
+            .toArray();
+          res.send(result);
+        } catch (error) {
+          res
+            .status(500)
+            .send({ message: "Failed to fetch recent blogs", error });
+        }
+      });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
