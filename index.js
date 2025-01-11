@@ -156,6 +156,20 @@ async function run() {
       const result = await blogsCollection.find(query).toArray();
       res.send(result);
     });
+    //getting data from wishlist
+    app.get("/wishlist", async (req, res) => {
+      const query = { userEmail: req.query.email };
+      const result = await wishlist.find(query).toArray();
+      // console.log(result);
+      res.send(result);
+    });
+
+    // deleting from wishlist
+    app.delete("/wishlist/:id", async (req, res) => {
+      const query = { _id: new ObjectId(req.params.id) }; // Ensure ObjectId is imported from 'mongodb'
+      const result = await wishlist.deleteOne(query); // Replace `wishlist` with your actual collection reference
+      res.send(result);
+    });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
