@@ -3,7 +3,7 @@ const cors = require('cors');
 require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 5000;
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 app.use(cors());
 app.use(express.json());
@@ -28,10 +28,24 @@ async function run() {
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
     const blogsCollection = client.db("blogWebsite").collection("Blogs");
     const wishlist = client.db("blogWebsite").collection("Wishlist");
+    const commentsCollection = client.db("blogWebsite").collection("Comments");
 
     app.post("/blogs", async (req, res) => {
       const blog = req.body;
       const result = await blogsCollection.insertOne(blog);
+      res.send(result);
+    });
+    // posting comments
+    app.post("/comments", async (req, res) => {
+      const comment = req.body;
+      const result = await commentsCollection.insertOne(comment);
+      res.send(result);
+    });
+    // getting comments
+    app.get("/comments/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { blogId: id };
+      const result = await commentsCollection.find(query).toArray();
       res.send(result);
     });
 
@@ -135,6 +149,12 @@ async function run() {
         // console.error("Error fetching blogs:", error);
         res.status(500).json({ error: "Internal Server Error" });
       }
+    });
+    app.get("/blogs/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await blogsCollection.find(query).toArray();
+      res.send(result);
     });
   } finally {
     // Ensures that the client will close when you finish/error
