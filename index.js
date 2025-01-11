@@ -105,6 +105,37 @@ async function run() {
         res.send({ count });
       });
     });
+    app.get("/featuredBlogs", async (req, res) => {
+      try {
+        // Use blogsCollection instead of db.blogsCollection
+        const topBlogs = await blogsCollection
+          .aggregate([
+            {
+              $addFields: {
+                stringLength: { $strLenCP: "$longDescription" }, // Calculate the string length
+              },
+            },
+            {
+              $sort: { stringLength: -1 }, // Sort by string length in descending order
+            },
+            {
+              $limit: 10, // Get the top 10 results
+            },
+            {
+              $project: {
+                // Remove the temporary stringLength field from the response
+                stringLength: 0,
+              },
+            },
+          ])
+          .toArray(); // Convert the aggregation cursor to an array
+
+        res.status(200).json(topBlogs); // Send the result as a JSON response
+      } catch (error) {
+        // console.error("Error fetching blogs:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+      }
+    });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
