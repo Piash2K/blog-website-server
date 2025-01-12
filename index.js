@@ -195,6 +195,38 @@ async function run() {
       // console.log(result);
       res.send(result);
     });
+    // popular categories
+    app.get("/popularCategories", async (req, res) => {
+      try {
+        const result = await blogsCollection
+          .aggregate([
+            {
+              $group: {
+                _id: "$category", // Group by category
+                count: { $sum: 1 }, // Count the occurrences
+              },
+            },
+            {
+              $sort: { count: -1 }, // Sort by count in descending order
+            },
+            {
+              $limit: 3, // Limit to top 3 categories
+            },
+          ])
+          .toArray();
+
+        // Map the result to include category name and count
+        const popularCategories = result.map((item) => ({
+          name: item._id,
+          count: item.count,
+        }));
+
+        res.send(popularCategories);
+      } catch (err) {
+        // console.error("Error fetching popular categories:", err);
+        res.status(500).send({ message: "Failed to fetch popular categories" });
+      }
+    });
 
     // updating information
     app.patch("/update/:id", async (req, res) => {
