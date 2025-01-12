@@ -38,6 +38,7 @@ async function run() {
     // posting comments
     app.post("/comments", async (req, res) => {
       const comment = req.body;
+      comment.createdAt = new Date();
       const result = await commentsCollection.insertOne(comment);
       res.send(result);
     });
@@ -170,6 +171,23 @@ async function run() {
       const result = await wishlist.deleteOne(query); // Replace `wishlist` with your actual collection reference
       res.send(result);
     });
+
+    // Fetching recent comments
+    app.get("/recentComments", async (req, res) => {
+      try {
+        // Sort comments by the timestamp (most recent first) and limit to 6
+        const result = await commentsCollection
+          .find()
+          .sort({ createdAt: -1 }) // Ensure createdAt field exists and is used for sorting
+          .limit(3)
+          .toArray();
+
+        res.status(200).send(result);
+      } catch (error) {
+        res.status(500).send({ message: "Failed to fetch recent comments", error });
+      }
+    });
+
     app.get("/update/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
