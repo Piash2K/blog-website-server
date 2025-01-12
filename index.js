@@ -170,6 +170,48 @@ async function run() {
       const result = await wishlist.deleteOne(query); // Replace `wishlist` with your actual collection reference
       res.send(result);
     });
+    app.get("/update/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await blogsCollection.find(query).toArray();
+      // console.log(result);
+      res.send(result);
+    });
+
+    // updating information
+    app.patch("/update/:id", async (req, res) => {
+      const id = req.params.id;
+      const data = req.body;
+
+      // Ensure the ID and data are valid
+      if (!id || !data || Object.keys(data).length === 0) {
+        return res
+          .status(400)
+          .send({ message: "Invalid data provided for update." });
+      }
+
+      const filter = { _id: new ObjectId(id) };
+
+      // Dynamically update only the fields provided in the request
+      const updatedDoc = {
+        $set: { ...data }, // Spread operator to handle all provided fields dynamically
+      };
+
+      try {
+        const result = await blogsCollection.updateOne(filter, updatedDoc);
+        if (result.matchedCount === 0) {
+          return res.status(404).send({ message: "Blog not found." });
+        }
+
+        res.send({
+          message: "Blog updated successfully.",
+          modifiedCount: result.modifiedCount,
+        });
+      } catch (error) {
+        // console.error("Error updating blog:", error);
+        res.status(500).send({ message: "Internal server error." });
+      }
+    });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
