@@ -82,7 +82,7 @@ async function run() {
         })
         .send({ success: true });
     });
-    app.post("/blogs",verifyToken, async (req, res) => {
+    app.post("/blogs", verifyToken, async (req, res) => {
       const blog = req.body;
       const result = await blogsCollection.insertOne(blog);
       res.send(result);
@@ -203,14 +203,14 @@ async function run() {
         res.status(500).json({ error: "Internal Server Error" });
       }
     });
-    app.get("/blogs/:id", async (req, res) => {
+    app.get("/blogs/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await blogsCollection.find(query).toArray();
       res.send(result);
     });
     //getting data from wishlist
-    app.get("/wishlist",verifyToken, async (req, res) => {
+    app.get("/wishlist", verifyToken, async (req, res) => {
       const query = { userEmail: req.query.email };
       if (req.user.email !== req.query.email) {
         return res.status(403).send({ message: "Forbidden Access" });
@@ -284,7 +284,7 @@ async function run() {
     });
 
     // updating information
-    app.patch("/update/:id", async (req, res) => {
+    app.patch("/update/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const data = req.body;
 
