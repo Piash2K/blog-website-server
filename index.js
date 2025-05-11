@@ -105,7 +105,7 @@ async function run() {
       const result = await commentsCollection.find(query).toArray();
       res.send(result);
     });
-
+    // Posting wishlist 
     app.post("/wishlist", async (req, res) => {
       const { blogId, userEmail } = req.body;
 
@@ -126,37 +126,79 @@ async function run() {
         res.status(500).send({ message: "Failed to add to wishlist." });
       }
     });
+    // Getting blogs related data
     app.get("/blogs", async (req, res) => {
       const page = parseInt(req.query.page);
       const size = parseInt(req.query.size);
-      const search = req.query.search || ""; // Get the search query, default to empty string if not provided
-      const category = req.query.category || ""; // Get the category, default to empty string if not provided
+      const search = req.query.search || "";
+      const category = req.query.category || "";
+      const sort = req.query.sort || ""; // New: Get the sort parameter
 
       let filter = {};
 
-      // If there's a search query, filter the blogs by title (or other fields like content)
       if (search) {
-        filter.title = { $regex: search, $options: "i" }; // Case-insensitive search by title
+        filter.title = { $regex: search, $options: "i" };
       }
 
-      // If a category is selected, filter by category
       if (category) {
         filter.category = category;
       }
 
+      let sortOption = {};
+      if (sort === "newest") {
+        sortOption = { postedTime: -1 }; // Sort by newest first
+      } else if (sort === "oldest") {
+        sortOption = { postedTime: 1 }; // Sort by oldest first
+      } else if (sort === "asc") {
+        sortOption = { title: 1 }; // Sort by title in ascending order (A-Z)
+      } else if (sort === "desc") {
+        sortOption = { title: -1 }; // Sort by title in descending order (Z-A)
+      }
+    
+
       try {
         const result = await blogsCollection
           .find(filter)
+          .sort(sortOption) // Apply sorting
           .skip(page * size)
           .limit(size)
           .toArray();
         res.send(result);
       } catch (error) {
-        res
-          .status(500)
-          .send({ message: "Error fetching blogs", error: error.message });
+        res.status(500).send({ message: "Error fetching blogs", error: error.message });
       }
     });
+    // app.get("/blogs", async (req, res) => {
+    //   const page = parseInt(req.query.page);
+    //   const size = parseInt(req.query.size);
+    //   const search = req.query.search || ""; // Get the search query, default to empty string if not provided
+    //   const category = req.query.category || ""; // Get the category, default to empty string if not provided
+
+    //   let filter = {};
+
+    //   // If there's a search query, filter the blogs by title (or other fields like content)
+    //   if (search) {
+    //     filter.title = { $regex: search, $options: "i" }; // Case-insensitive search by title
+    //   }
+
+    //   // If a category is selected, filter by category
+    //   if (category) {
+    //     filter.category = category;
+    //   }
+
+    //   try {
+    //     const result = await blogsCollection
+    //       .find(filter)
+    //       .skip(page * size)
+    //       .limit(size)
+    //       .toArray();
+    //     res.send(result);
+    //   } catch (error) {
+    //     res
+    //       .status(500)
+    //       .send({ message: "Error fetching blogs", error: error.message });
+    //   }
+    // });
 
     app.get("/recentBlogs", async (req, res) => {
       try {
@@ -172,7 +214,7 @@ async function run() {
           .send({ message: "Failed to fetch recent blogs", error });
       }
       app.get("/blogsCount", async (req, res) => {
-        const count = await blogsCollection.estimatedDocumentCount();
+        const count = await blogsCollection.countDocuments();
         res.send({ count });
       });
     });
@@ -334,4 +376,4 @@ app.get('/', (req, res) => {
 
 app.listen(port, () => {
   console.log(`Blog website is running at port: ${port}`);
-});
+}); 
